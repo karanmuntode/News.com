@@ -1,14 +1,13 @@
 import React, { Component } from "react";
 import NewsItem from "./NewsItem";
-import Spinner from "./Spinner"; 
+import Spinner from "./Spinner";
 
 export class News extends Component {
   constructor() {
     super();
-
     this.state = {
       articles: [],
-      loading: false, 
+      loading: false,
       page: 1,
       totalResults: 0,
       articlesPerPage: 6,
@@ -16,15 +15,14 @@ export class News extends Component {
   }
 
   async componentDidMount() {
-    this.setState({ loading: true }); 
-    await this.fetchNews(); 
-    this.setState({ loading: false }); 
+    this.setState({ loading: true });
+    await this.fetchNews();
+    this.setState({ loading: false });
   }
 
   fetchNews = async () => {
     const { page, articlesPerPage } = this.state;
-    let url = `https://gnews.io/api/v4/top-headlines?category=business&lang=en&country=us&max=${articlesPerPage}&page=${page}&apikey=YOUR_GNEWS_KEY`
-
+    let url = `https://gnews.io/api/v4/top-headlines?category=business&lang=en&country=us&max=${articlesPerPage}&page=${page}&apikey=3efd9d9ef570a63becaa6c1c5f4f98f9`;
     let data = await fetch(url);
     let parsedData = await data.json();
     this.setState({
@@ -45,7 +43,6 @@ export class News extends Component {
   handleNext = async () => {
     const { page, totalResults, articlesPerPage } = this.state;
     const totalPages = Math.ceil(totalResults / articlesPerPage);
-
     if (page < totalPages) {
       this.setState({ page: this.state.page + 1, loading: true }, async () => {
         await this.fetchNews();
@@ -57,50 +54,27 @@ export class News extends Component {
   render() {
     const { articles, page, totalResults, articlesPerPage, loading } = this.state;
     const totalPages = Math.ceil(totalResults / articlesPerPage);
-
     return (
       <div className="container my-3">
         <h2>Top Headlines</h2>
-
-       
         {loading && <Spinner />}
-
         <div className="row">
-          {articles.map((element) => (
+          {articles && articles.map((element) => (
             <div className="col-md-4" key={element.url}>
               <NewsItem
-                title={
-                  element.title && element.title.length > 30
-                    ? element.title.slice(0, 30) + "..."
-                    : element.title
-                }
-                description={
-                  element.description && element.description.length > 80
-                    ? element.description.slice(0, 80) + "..."
-                    : element.description
-                }
-                imageUrl={element.urlToImage}
+                title={element.title && element.title.length > 30 ? element.title.slice(0, 30) + "..." : element.title}
+                description={element.description && element.description.length > 80 ? element.description.slice(0, 80) + "..." : element.description}
+                imageUrl={element.image}
                 newsUrl={element.url}
               />
             </div>
           ))}
         </div>
-
         <div className="container d-flex justify-content-between">
-          <button
-            type="button"
-            className="btn btn-warning"
-            onClick={this.handleBack}
-            disabled={page === 1}
-          >
+          <button type="button" className="btn btn-warning" onClick={this.handleBack} disabled={page === 1}>
             &larr; Back
           </button>
-          <button
-            type="button"
-            className="btn btn-warning"
-            onClick={this.handleNext}
-            disabled={page === totalPages}
-          >
+          <button type="button" className="btn btn-warning" onClick={this.handleNext} disabled={page === totalPages}>
             Next &rarr;
           </button>
         </div>
