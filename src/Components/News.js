@@ -20,7 +20,7 @@ export class News extends Component {
   }
 
   fetchNews = async (pageToken) => {
-    let url = `https://newsdata.io/api/1/news?apikey=YOUR_NEWSDATA_KEY&language=en&category=business`;
+    let url = `https://newsdata.io/api/1/news?apikey=pub_97097bc6d16a41c5b78009e9ce41ce36&language=en&category=business`;
     if (pageToken) url += `&page=${pageToken}`;
     let data = await fetch(url);
     let parsedData = await data.json();
@@ -31,12 +31,9 @@ export class News extends Component {
   };
 
   handleNext = async () => {
-    const { nextPage, prevPages, articles } = this.state;
+    const { nextPage, prevPages } = this.state;
     if (nextPage) {
-      this.setState({
-        loading: true,
-        prevPages: [...prevPages, nextPage],
-      });
+      this.setState({ loading: true, prevPages: [...prevPages, nextPage] });
       await this.fetchNews(nextPage);
       this.setState({ loading: false });
     }
