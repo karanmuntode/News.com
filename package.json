@@ -1,5 +1,6 @@
 {
   "name": "news.com",
+  "homepage": "https://karanmuntode.github.io/News.com",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
