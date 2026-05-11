@@ -8,73 +8,79 @@ export class News extends Component {
     this.state = {
       articles: [],
       loading: false,
-      page: 1,
-      totalResults: 0,
-      articlesPerPage: 6,
+      nextPage: null,
+      prevPages: [],
     };
   }
 
   async componentDidMount() {
     this.setState({ loading: true });
-    await this.fetchNews();
+    await this.fetchNews(null);
     this.setState({ loading: false });
   }
 
-  fetchNews = async () => {
-    const { page, articlesPerPage } = this.state;
-    let url = `https://gnews.io/api/v4/search?q=latest&lang=en&country=us&max=${articlesPerPage}&page=${page}&apikey=3efd9d9ef570a63becaa6c1c5f4f98f9`;
+  fetchNews = async (pageToken) => {
+    let url = `https://newsdata.io/api/1/news?apikey=YOUR_NEWSDATA_KEY&language=en&category=business`;
+    if (pageToken) url += `&page=${pageToken}`;
     let data = await fetch(url);
     let parsedData = await data.json();
     this.setState({
-      articles: parsedData.articles,
-      totalResults: parsedData.totalArticles,
+      articles: parsedData.results || [],
+      nextPage: parsedData.nextPage || null,
     });
   };
 
-  handleBack = async () => {
-    if (this.state.page > 1) {
-      this.setState({ page: this.state.page - 1, loading: true }, async () => {
-        await this.fetchNews();
-        this.setState({ loading: false });
+  handleNext = async () => {
+    const { nextPage, prevPages, articles } = this.state;
+    if (nextPage) {
+      this.setState({
+        loading: true,
+        prevPages: [...prevPages, nextPage],
       });
+      await this.fetchNews(nextPage);
+      this.setState({ loading: false });
     }
   };
 
-  handleNext = async () => {
-    const { page, totalResults, articlesPerPage } = this.state;
-    const totalPages = Math.ceil(totalResults / articlesPerPage);
-    if (page < totalPages) {
-      this.setState({ page: this.state.page + 1, loading: true }, async () => {
-        await this.fetchNews();
-        this.setState({ loading: false });
-      });
+  handleBack = async () => {
+    const { prevPages } = this.state;
+    if (prevPages.length > 1) {
+      const newPrev = [...prevPages];
+      newPrev.pop();
+      const prevToken = newPrev[newPrev.length - 1];
+      this.setState({ loading: true, prevPages: newPrev });
+      await this.fetchNews(prevToken);
+      this.setState({ loading: false });
+    } else {
+      this.setState({ loading: true, prevPages: [] });
+      await this.fetchNews(null);
+      this.setState({ loading: false });
     }
   };
 
   render() {
-    const { articles, page, totalResults, articlesPerPage, loading } = this.state;
-    const totalPages = Math.ceil(totalResults / articlesPerPage);
+    const { articles, loading, nextPage, prevPages } = this.state;
     return (
       <div className="container my-3">
         <h2>Top Headlines</h2>
         {loading && <Spinner />}
         <div className="row">
           {articles && articles.map((element) => (
-            <div className="col-md-4" key={element.url}>
+            <div className="col-md-4" key={element.link}>
               <NewsItem
-                title={element.title && element.title.length > 30 ? element.title.slice(0, 30) + "..." : element.title}
-                description={element.description && element.description.length > 80 ? element.description.slice(0, 80) + "..." : element.description}
-                imageUrl={element.image}
-                newsUrl={element.url}
+                title={element.title ? element.title.slice(0, 50) + "..." : "No title"}
+                description={element.description ? element.description.slice(0, 80) + "..." : "No description"}
+                imageUrl={element.image_url}
+                newsUrl={element.link}
               />
             </div>
           ))}
         </div>
         <div className="container d-flex justify-content-between">
-          <button type="button" className="btn btn-warning" onClick={this.handleBack} disabled={page === 1}>
+          <button type="button" className="btn btn-warning" onClick={this.handleBack} disabled={prevPages.length === 0}>
             &larr; Back
           </button>
-          <button type="button" className="btn btn-warning" onClick={this.handleNext} disabled={page === totalPages}>
+          <button type="button" className="btn btn-warning" onClick={this.handleNext} disabled={!nextPage}>
             Next &rarr;
           </button>
         </div>
