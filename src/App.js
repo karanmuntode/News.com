@@ -1,8 +1,9 @@
-import React, { Component } from 'react';
-import Navbar from './Navbar';
-import News from './News';
+import './App.css';
+import React, { Component } from 'react'
+import Navbar from './Components/Navbar';
+import News from './Components/News';
 
-class App extends Component {
+export default class App extends Component {
   constructor() {
     super();
     this.state = {
@@ -22,15 +23,16 @@ class App extends Component {
   render() {
     return (
       <div>
-        <Navbar setCategory={this.setCategory} setSearch={this.setSearch} />
+        <Navbar
+          setCategory={this.setCategory}
+          setSearch={this.setSearch}
+        />
         <News
           key={this.state.category + this.state.searchQuery}
           category={this.state.category}
           searchQuery={this.state.searchQuery}
         />
       </div>
-    );
+    )
   }
 }
-
-export default App;
