@@ -3,6 +3,7 @@ import NewsItem from "./NewsItem";
 import Spinner from "./Spinner";
 
 export class News extends Component {
+
   constructor() {
     super();
     this.state = {
@@ -20,7 +21,13 @@ export class News extends Component {
   }
 
   fetchNews = async (pageToken) => {
-    let url = `https://newsdata.io/api/1/news?apikey=pub_97097bc6d16a41c5b78009e9ce41ce36&language=en&category=business`;
+    const { category, searchQuery } = this.props;
+    let url = '';
+    if (searchQuery) {
+      url = `https://newsdata.io/api/1/news?apikey=pub_97097bc6d16a41c5b78009e9ce41ce36&language=en&q=${searchQuery}`;
+    } else {
+      url = `https://newsdata.io/api/1/news?apikey=pub_97097bc6d16a41c5b78009e9ce41ce36&language=en&category=${category || 'business'}`;
+    }
     if (pageToken) url += `&page=${pageToken}`;
     let data = await fetch(url);
     let parsedData = await data.json();
@@ -44,9 +51,8 @@ export class News extends Component {
     if (prevPages.length > 1) {
       const newPrev = [...prevPages];
       newPrev.pop();
-      const prevToken = newPrev[newPrev.length - 1];
       this.setState({ loading: true, prevPages: newPrev });
-      await this.fetchNews(prevToken);
+      await this.fetchNews(newPrev[newPrev.length - 1]);
       this.setState({ loading: false });
     } else {
       this.setState({ loading: true, prevPages: [] });
@@ -55,15 +61,31 @@ export class News extends Component {
     }
   };
 
+  getCategoryTitle = () => {
+    const { category, searchQuery } = this.props;
+    if (searchQuery) return `🔍 Results for "${searchQuery}"`;
+    const titles = {
+      business: '💼 Business News',
+      entertainment: '🎬 Entertainment',
+      world: '🌍 World Affairs',
+      sports: '⚽ Sports',
+      technology: '💻 Technology',
+      environment: '🌾 Agriculture & Environment',
+      health: '🏥 Health',
+      science: '🔬 Science',
+    };
+    return titles[category] || '📰 Top Headlines';
+  }
+
   render() {
     const { articles, loading, nextPage, prevPages } = this.state;
     return (
       <div className="container my-3">
-        <h2>Top Headlines</h2>
+        <h2 className="mb-4">{this.getCategoryTitle()}</h2>
         {loading && <Spinner />}
         <div className="row">
           {articles && articles.map((element) => (
-            <div className="col-md-4" key={element.link}>
+            <div className="col-md-4 mb-3" key={element.link}>
               <NewsItem
                 title={element.title ? element.title.slice(0, 50) + "..." : "No title"}
                 description={element.description ? element.description.slice(0, 80) + "..." : "No description"}
@@ -73,11 +95,19 @@ export class News extends Component {
             </div>
           ))}
         </div>
-        <div className="container d-flex justify-content-between">
-          <button type="button" className="btn btn-warning" onClick={this.handleBack} disabled={prevPages.length === 0}>
+        {!loading && articles.length === 0 &&
+          <div className="text-center mt-5">
+            <h4>No articles found</h4>
+            <p className="text-muted">Try a different category or search term</p>
+          </div>
+        }
+        <div className="container d-flex justify-content-between mt-3">
+          <button type="button" className="btn btn-warning"
+            onClick={this.handleBack} disabled={prevPages.length === 0}>
             &larr; Back
           </button>
-          <button type="button" className="btn btn-warning" onClick={this.handleNext} disabled={!nextPage}>
+          <button type="button" className="btn btn-warning"
+            onClick={this.handleNext} disabled={!nextPage}>
             Next &rarr;
           </button>
         </div>
